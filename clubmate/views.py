@@ -138,7 +138,7 @@ def delete_rating(request, rating_id):
     ratingDelete.delete()
     return redirect(reverse('clubmate:profile', kwargs={'username': user.username}))
 
-
+    
 def login(request):
     return render(request, 'clubmate/login.html')
 
