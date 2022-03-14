@@ -1,0 +1,75 @@
+{% extends 'clubmate/base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}
+    {% if club %}
+        {{ club.name }}
+    {% else %}
+        Unknown Club
+    {% endif %}
+{% endblock %}
+
+{% block body_block %}
+    {% if club %}
+        <!-- Display club details -->
+
+        <!-- TODO Display success message after voting JS -->
+
+        <h1>{{ club.name }} <span class="badge badge-pill badge-dark">⭐ {{ club.average_rating_ }}</span> <span
+                class="badge badge-pill badge-dark">❤️‍🩹 {{ club.user_reported_safety_ }}</span></h1>
+        <p>{{ club.club_description }}</p>
+        <img src="{{ club.picture.url }}" width="40%" class="mb-3">
+        <p><strong>Minimum Entry Fee </strong>£{{ club.entry_fee }}</p>
+        <p><strong>Genre </strong>{{ club.genre }}</p>
+        <p><strong>City </strong>{{ club.city }}</p>
+        <p><strong>Open </strong>Mon-Fri: {{ club.opening_hours_week }},
+            Sat-Sun: {{ club.opening_hours_weekend }}</p>
+        <p><strong>Website </strong><a href="{{ club.website_url }}">{{ club.website_url }}</a></p>
+        <p><strong>18+ Entry </strong>{{ club.underage_visitors_allowed }}</p>
+        <p><strong>COVID Test Required </strong>{{ club.covid_test_required }}</p>
+
+        <!-- Display location -->
+        <h2 class="mt-3 mb-3 pt-3">Location</h2> <!-- Use this margin and padding after every new piece of info -->
+        <input type="hidden" id="coordinates" name="coordinates" value="{{ club.location_coordinates }}">
+        <div id="map"></div>
+
+        <!-- Display events -->
+        <h2 class="mt-3 mb-3 pt-3">Upcoming events</h2>
+        <div class="card-deck">
+            {% for event in club.events_list.all %}
+                <div class="card" style="max-width: 18rem">
+                    <img class="card-img-top" src="{{ event.picture.url }}" alt="An image of a club">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ event.title }}</h5>
+                        <p class="card-text">{{ event.happening_at }}</p>
+                        <p class="card-text"><small class="text-muted">Maximum of {{ event.capacity }} attendees</small>
+                        </p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Display user ratings -->
+        <h2 class="mt-3 mb-3 pt-3">Recent User Ratings</h2>
+        {% for rating in club.ratings_list.all %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ rating.title }} <span
+                            class="badge badge-pill badge-dark">⭐ {{ rating.rating_score }}</span> <span
+                            class="badge badge-pill badge-dark">❤️‍🩹 {{ rating.user_reported_safety_ }}</span></h5>
+                    <p class="card-text">{{ rating.user_commentary }}</p>
+                    <blockquote class="blockquote mb-3">
+                        <footer class="blockquote-footer">said <a href="{% url 'clubmate:profile' rating.author %}">{{ rating.author }}</a>
+                        </footer>
+                    </blockquote>
+                    <p class="card-text"><small class="text-muted">{{ rating.number_of_upvotes }} upvotes</small></p>
+                    <a id="upvote" href="{% url 'clubmate:upvote_rating' rating.id %}" class="btn btn-primary btn-sm">Upvote</a> <!-- Upvote Django-->
+                </div>
+            </div>
+        {% endfor %}
+        <div class="align-right"><p>Show more</p></div> <!-- TODO: Limit how many shown with JS? -->
+
+    {% else %}
+        The specified club does not exist
+    {% endif %}
+{% endblock %}
