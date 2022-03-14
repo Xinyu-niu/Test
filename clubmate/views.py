@@ -96,11 +96,11 @@ def save_club(request, club_id):
 def add_club(request):
     return render(request, 'clubmate/add_club.html')
 
-
+# Finish user profile page: can show rating list correctlly
 def profile(request, username):
     user = User.objects.get(username=username)  # Match username from the default user
     clubmate_user = UserProfile.objects.get(user=user)  # Match it with our custom user
-    rating_list = Rating.objects.filter(author=clubmate_user)
+    rating_list = Rating.objects.filter(author=clubmate_user)  # get the rating from the user
     context = {'clubmate_user': clubmate_user, 'ratingList': rating_list}
     return render(request, 'clubmate/profile.html', context=context)
 
@@ -129,9 +129,9 @@ def edit_rating(request, rating_id):
         return render(request, 'clubmate/edit_rating.html', context)
 
 
-@login_required
+@login_required    #need to check 
 def delete_rating(request, rating_id):
-    rating = Rating.objects.get(id=rating_id)
+    rating = Rating.objects.filter(id=rating_id)  
     rating.delete()
     return render(request, 'clubmate/profile.html')
 
