@@ -101,8 +101,10 @@ def profile(request, username):
     user = User.objects.get(username=username)  # Match username from the default user
     clubmate_user = UserProfile.objects.get(user=user)  # Match it with our custom user
     rating_list = Rating.objects.filter(author=clubmate_user)  # get the rating from the user
-    context = {'clubmate_user': clubmate_user, 'ratingList': rating_list}
+    context = {'clubmate_user': clubmate_user, 'ratingList': rating_list, }
     return render(request, 'clubmate/profile.html', context=context)
+
+
 
 
 @staff_member_required
@@ -118,7 +120,7 @@ def delete_club(request, club_id):
 @login_required
 def edit_rating(request, rating_id):
     rating = Rating.objects.get(id=rating_id)  # Get the rating
-
+    
     if request.method == 'POST':
         new_rating = request.POST.get('user_commentary')
         rating.user_commentary = new_rating
