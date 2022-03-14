@@ -133,9 +133,10 @@ def edit_rating(request, rating_id):
 
 @login_required    #need to check 
 def delete_rating(request, rating_id):
-    rating = Rating.objects.filter(id=rating_id)  
-    rating.delete()
-    return render(request, 'clubmate/profile.html')
+    ratingDelete = Rating.objects.filter(id=rating_id)  
+    user = request.user  # Get the current user
+    ratingDelete.delete()
+    return redirect(reverse('clubmate:profile', kwargs={'username': user.username}))
 
 
 def login(request):
