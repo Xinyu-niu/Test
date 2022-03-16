@@ -41,3 +41,16 @@ body {
 #search-list li a:hover:not(.header) {
     background-color: #eee;
 }
+
+
+#elements {
+    display: none;
+}
+
+#search-input {
+  width: 100%;
+  padding: 10px 35px 10px 15px;
+  border: none;
+  border-radius: 100px;
+  outline: none;
+}

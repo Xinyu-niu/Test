@@ -13,60 +13,64 @@ import dateutil.parser
 
 def populate():
     users = {
-        'averagestudents': {'password': 'averagestudents',
-                           'email': 'averagestudents@averagestudents.com',
+        'averagestudent': {'password': 'averagestudent',
+                           'email': 'averagestudent@averagestudent.com',
                            'first_name': 'Sarah-Jayne',
                            'last_name': 'Barr',
-                           'bio': 'One day, I hope to be a happily married old man telling wild stories from his wild youth'},
+                           'bio': 'One day, I hope to be a happily married old man telling wild stories from his wild youth',
+                           'is_club_owner': 'False'},
 
         'ironmansnap': {
             'password': 'ironmansnap',
             'email': 'ironmansnap@ironmansnap.com',
             'first_name': 'Anwen',
             'last_name': 'Metcalfe',
-            'bio': 'Currently hanging out in 🇵🇹'},
+            'bio': 'Currently hanging out in 🇵🇹',
+            'is_club_owner': 'False'},
 
         'ghostfacegangsta': {'password': 'ghostfacegangsta',
                              'email': 'ghostfacegangsta@ghostfacegangsta.com',
                              'first_name': 'Charis',
                              'last_name': 'Singh',
-                             'bio': 'People call me Michael but you can call me tonight 😉'},
+                             'bio': 'People call me Michael but you can call me tonight 😉',
+                             'is_club_owner': 'False'},
 
         'MrsDracoMalfoy': {'password': 'MrsDracoMalfoy',
                            'email': 'MrsDracoMalfoy@MrsDracoMalfoy.com',
                            'first_name': 'Agnès',
                            'last_name': 'Wright',
-                           'bio': 'Gamer. Alcohol fanatic. Coffee practitioner.'},
+                           'bio': 'Gamer. Alcohol fanatic. Coffee practitioner.',
+                           'is_club_owner': 'False'},
 
         'emilyramo': {
             'password': 'emilyramo',
             'first_name': 'Emily',
             'last_name': 'Ramo',
             'email': 'emilyramo@emilyramo.com',
-            'bio': 'Thank you, come again'
-        },
+            'bio': '😉',
+            'is_club_owner': 'False'},
 
         'RidleyRich': {
             'password': 'RidleyRich',
             'email': 'RidleyRich@RidleyRich.com',
             'first_name': 'Ridley',
             'last_name': 'Preston',
-            'bio': 'Thank you, come again'
-        },
+            'bio': 'Thank you, come again',
+            'is_club_owner': 'True'},
 
         'SuperMagnificentExtreme': {
             'password': 'SuperMagnificentExtreme',
             'first_name': 'Konrad',
             'last_name': 'Chen',
             'email': 'SuperMagnificentExtreme@SuperMagnificentExtreme.com',
-            'bio': 'Thank you, come again'
-        },
+            'bio': 'Thank you, come again',
+            'is_club_owner': 'True'},
     }
 
     user_map = {}
     for username, data in users.items():
         u = add_user(username, data['password'], data['email'], data['bio'], data['first_name'],
-                     data['last_name'])
+                     data['last_name'], data['is_club_owner'])
         user_map[username] = u
         print(f'– {u} was added')
 
@@ -172,7 +176,7 @@ def populate():
     ratings = [
         {'title': 'Great club',
          'club': club_map['SWG3'],
-         'author': user_map['averagestudents'],
+         'author': user_map['averagestudent'],
          'rating_score': '4.5',
          'is_safe': 'True',
          'user_commentary': "Awesome vibes, great club. A true gem. Their door policy is the best. 'Why are you here?' Perfect question. I always tell my friends about this place and the bouncer and the rumour about how the only fight ever to break out in the place was met by the dancers being so offended they took it upon themselves to throw the perpetrators themselves out the doors and into traffic. Staff hadn't needed to a thing. Who knows if it's true. Legend.",
@@ -230,16 +234,18 @@ def populate():
     user_map['MrsDracoMalfoy'].clubs.add(club_map['SWG3'])
     user_map['ghostfacegangsta'].clubs.add(club_map['SWG3'])
     user_map['ghostfacegangsta'].clubs.add(club_map['Sub Club'])
-    user_map['averagestudents'].clubs.add(club_map['SWG3'])
-    user_map['averagestudents'].clubs.add(club_map['Inn Deep'])
+    user_map['averagestudent'].clubs.add(club_map['SWG3'])
+    user_map['averagestudent'].clubs.add(club_map['Inn Deep'])
     user_map['emilyramo'].clubs.add(club_map['Inn Deep'])
 
 
-def add_user(username, password, email, bio, first_name, last_name):
-    u = User(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
+def add_user(username, password, email, bio, first_name, last_name, is_club_owner):
+    u = User(username=username, email=email, first_name=first_name, last_name=last_name)
+    u.set_password(password)
     u.save()
     cu = UserProfile.objects.get_or_create(user=u)[0]  # cu – clubmate user
     cu.bio = bio  # Set the bio
+    cu.is_club_owner = is_club_owner
     cu.save()
     return cu
 
