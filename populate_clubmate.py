@@ -55,7 +55,7 @@ def populate():
             'email': 'RidleyRich@RidleyRich.com',
             'first_name': 'Ridley',
             'last_name': 'Preston',
-            'bio': 'Thank you, come again',
+            'bio': '99% ☕️',
             'is_club_owner': 'True'},
 
         'SuperMagnificentExtreme': {
@@ -63,7 +63,7 @@ def populate():
             'first_name': 'Konrad',
             'last_name': 'Chen',
             'email': 'SuperMagnificentExtreme@SuperMagnificentExtreme.com',
-            'bio': 'Thank you, come again',
+            'bio': 'Welcome to my 👑dom',
             'is_club_owner': 'True'},
     }
 
@@ -82,8 +82,8 @@ def populate():
             'genre': 'Techno',
             'location_coordinates': '55.86479 -4.29999',
             'entry_fee': '8.0',
-            'opening_hours_week': '12PM–12AM',
-            'opening_hours_weekend': '12PM–12AM',
+            'opening_hours_week': '10PM–12AM',
+            'opening_hours_weekend': '10PM–12AM',
             'picture': 'club_pictures/swg3.jpeg',
             'covid_test_required': 'True',  # Change to human-friendly names next time
             'underage_visitors_allowed': 'True',
@@ -121,6 +121,22 @@ def populate():
             'underage_visitors_allowed': 'False',
             'average_rating': '0.0',
             'user_reported_safety': 'False'},
+
+        'Fabric': {
+            'club_description': '3 massive spaces host resident and guest DJs playing drum and bass, dubstep, house and techno.',
+            'city': 'London',
+            'website_url': 'https://www.fabriclondon.com/',
+            'genre': 'House',
+            'location_coordinates': '51.5195856 -0.1024735',
+            'entry_fee': '13.0',
+            'opening_hours_week': '11PM–12AM',
+            'opening_hours_weekend': '11PM–12AM',
+            'picture': 'club_pictures/fabric.jpeg',
+            'covid_test_required': 'False',
+            'underage_visitors_allowed': 'True',
+            'average_rating': '0.0',
+            'user_reported_safety': 'False'
+        },
     }
 
     club_map = {}
@@ -167,6 +183,20 @@ def populate():
             'happening_at': dateutil.parser.parse('06/06/22 20:00'),
             'capacity': '150'
         },
+
+        'After Dark': {
+            'club': club_map['Fabric'],
+            'picture': 'event_pictures/fabric_afterdark.jpeg',
+            'happening_at': dateutil.parser.parse('04/17/22 23:00'),
+            'capacity': '400'
+        },
+
+        '10 Years of Livity Sound': {
+            'club': club_map['Fabric'],
+            'picture': 'event_pictures/fabric_10yearsoflivitysound.jpeg',
+            'happening_at': dateutil.parser.parse('05/04/22 23:00'),
+            'capacity': '400'
+        },
     }
 
     for title, data in events.items():
@@ -180,7 +210,7 @@ def populate():
          'rating_score': '4.5',
          'is_safe': 'True',
          'user_commentary': "Awesome vibes, great club. A true gem. Their door policy is the best. 'Why are you here?' Perfect question. I always tell my friends about this place and the bouncer and the rumour about how the only fight ever to break out in the place was met by the dancers being so offended they took it upon themselves to throw the perpetrators themselves out the doors and into traffic. Staff hadn't needed to a thing. Who knows if it's true. Legend.",
-         'posted_at': dateutil.parser.parse('01/31/22 23:22'),
+         'posted_at': dateutil.parser.parse('02/26/22 23:22'),
          'number_of_upvotes': '23',
          },
 
@@ -190,7 +220,7 @@ def populate():
          'rating_score': '2.0',
          'is_safe': 'False',
          'user_commentary': "It's a good place, but it's very dangerous outside. Yesterday was my first day in Glasgow, and we've been attacked by 5 people. 1 girl 4 boys. So we had to leave the place...",
-         'posted_at': dateutil.parser.parse('01/21/22 13:05'),
+         'posted_at': dateutil.parser.parse('02/20/22 13:05'),
          'number_of_upvotes': '67',
          },
 
@@ -200,7 +230,7 @@ def populate():
          'rating_score': '1.0',
          'is_safe': 'False',
          'user_commentary': "Unbelievably disappointed. Entry was over 11 quid and pre booked ticket only, go buy two drinks, dance with my girlfriend for less than an hour. A bouncer comes into the the dance floor and tells me I have to leave and takes me outside, completely unwarranted. Girlfriend also had to leave after paying 11 quid. Would not recommend.",
-         'posted_at': dateutil.parser.parse('01/01/22 17:55'),
+         'posted_at': dateutil.parser.parse('02/18/22 17:55'),
          'number_of_upvotes': '107',
          },
 
@@ -210,7 +240,7 @@ def populate():
          'rating_score': '1.0',
          'is_safe': 'False',
          'user_commentary': "Please do not support this club. I came up to Glasgow as an early birthday treat to see my friend. When we were in the queue and tried to enter the club, an extremely arrogant and rude bouncer randomly selected myself and my friend and told us we were not allowed in for being ‘too drunk’.",
-         'posted_at': dateutil.parser.parse('12/03/22 10:55'),
+         'posted_at': dateutil.parser.parse('02/13/22 10:55'),
          'number_of_upvotes': '38',
          },
 
@@ -220,8 +250,28 @@ def populate():
          'rating_score': '3.5',
          'is_safe': 'True',
          'user_commentary': "Make sure you know who is playing or you won’t get in. Great nights, little mad but love it. Speaker system is unreal.",
-         'posted_at': dateutil.parser.parse('01/03/22 17:00'),
+         'posted_at': dateutil.parser.parse('02/10/22 17:00'),
          'number_of_upvotes': '7',
+         },
+
+        {'title': 'Absolutely incredible night',
+         'club': club_map['Fabric'],
+         'author': user_map['emilyramo'],
+         'rating_score': '5.0',
+         'is_safe': 'True',
+         'user_commentary': "By far the best club night I have ever been too. Went to a charity night for a guy who has been a promoter for many years and is well known to the fabric and friends and boy they put on a show. The line up was insane and the sounds system was just another level. One of the doorman at the end of the night helped me find my friend and made sure I was safe… really felt like they cared about customer safety.",
+         'posted_at': dateutil.parser.parse('01/21/22 12:22'),
+         'number_of_upvotes': '341',
+         },
+
+        {'title': 'Fabric the best dance venue',
+         'club': club_map['Fabric'],
+         'author': user_map['averagestudent'],
+         'rating_score': '4.5',
+         'is_safe': 'True',
+         'user_commentary': "Fabric is one of the best clubs there is. Security staff are great friendly and thorough, love the no photos etc policy everyone really gets into the music. Never have to queue in the toilets which are mixed sex and they are round the corner from the dance floor, cloak room if you need it and constant free fresh cold water being poured beside the bar which everyone takes. It’s just one of the best clubs in the world!!",
+         'posted_at': dateutil.parser.parse('01/03/22 13:34'),
+         'number_of_upvotes': '233',
          },
     ]
 
@@ -230,13 +280,22 @@ def populate():
                        rating['user_commentary'], rating['posted_at'], rating['number_of_upvotes'])
         print(f'– {r} was added')
 
-    # Add some clubs as "saved clubs" to some users, to make it look more natural instead of adding all to all
+    # Add some clubs as "saved clubs" to some student users, to make it look more natural instead of adding all to all
     user_map['MrsDracoMalfoy'].clubs.add(club_map['SWG3'])
+    user_map['MrsDracoMalfoy'].clubs.add(club_map['Fabric'])
     user_map['ghostfacegangsta'].clubs.add(club_map['SWG3'])
     user_map['ghostfacegangsta'].clubs.add(club_map['Sub Club'])
+    user_map['ghostfacegangsta'].clubs.add(club_map['Fabric'])
     user_map['averagestudent'].clubs.add(club_map['SWG3'])
     user_map['averagestudent'].clubs.add(club_map['Inn Deep'])
+    user_map['averagestudent'].clubs.add(club_map['Fabric'])
     user_map['emilyramo'].clubs.add(club_map['Inn Deep'])
+    user_map['emilyramo'].clubs.add(club_map['Fabric'])
+
+    # Add some clubs to club owners, the clubs they added
+    user_map['SuperMagnificentExtreme'].clubs.add(club_map['Sub Club'])
+    user_map['RidleyRich'].clubs.add(club_map['SWG3'])
+    user_map['RidleyRich'].clubs.add(club_map['Inn Deep'])
 
 
 def add_user(username, password, email, bio, first_name, last_name, is_club_owner):
@@ -270,6 +329,8 @@ def add_rating(title, club, author, rating_score, is_safe, user_commentary, post
                                      number_of_upvotes=number_of_upvotes)[0]
     r.user_reported_safety = False  # Default
     r.save()
+    r.posted_at = posted_at  # Enforce the new date
+    r.save(update_fields=['posted_at'])
     return r
 
 

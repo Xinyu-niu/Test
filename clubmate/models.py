@@ -3,6 +3,8 @@ from django.db import models
 from django.db.models import Avg
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.urls import reverse
+import os
+from django.conf import settings
 
 
 class Club(models.Model):
@@ -16,8 +18,9 @@ class Club(models.Model):
     opening_hours_week = models.CharField(max_length=20)
     opening_hours_weekend = models.CharField(max_length=20)
     picture = models.ImageField(upload_to='club_pictures', default='club_pictures/default_club.png', blank=True)
-    covid_test_required = models.BooleanField(default=0)
-    underage_visitors_allowed = models.BooleanField(default=0)
+    default = os.path.join(settings.MEDIA_DIR, 'club_pictures/default_club.png')  # For return default picture in views
+    covid_test_required = models.BooleanField(default=False)
+    underage_visitors_allowed = models.BooleanField(default=False)
     average_rating = models.FloatField(default=0.0, blank=True)
     user_reported_safety = models.BooleanField(default=False, blank=True)
 
@@ -29,18 +32,18 @@ class Club(models.Model):
 
     @property
     def average_rating_(self):
-        return self.ratings_list.aggregate(Avg('rating_score'))['rating_score__avg']  # Order by on-the-fly in views
+        if not self.ratings_list.exists():
+            return 0.0
+        return round(self.ratings_list.aggregate(Avg('rating_score'))['rating_score__avg'],
+                     1)  # Order by on-the-fly in views
 
     @property
     def user_reported_safety_(self):
+        if not self.ratings_list.exists():
+            return "UNSAFE"
         safe_count = self.ratings_list.filter(is_safe=True).count()
         unsafe_count = self.ratings_list.filter(is_safe=False).count()
         return "SAFE" if safe_count > unsafe_count else "UNSAFE"
-
-    # def save(self, *args, **kwarg):
-    #     self.average_rating = self.average_rating_
-    #     self.user_reported_safety = self.user_reported_safety_
-    #     super(Club, self).save(*args, **kwarg)
 
 
 class UserProfile(models.Model):
@@ -48,7 +51,7 @@ class UserProfile(models.Model):
     picture = models.ImageField(upload_to='profile_pictures', default='profile_pictures/default_user.png', blank=True)
     bio = models.CharField(max_length=100, blank=True)
     clubs = models.ManyToManyField(Club, blank=True)  # Storing the clubs users saved/added
-    is_club_owner = models.BooleanField(help_text="Tick this if you're a club owner")
+    is_club_owner = models.BooleanField(help_text="Tick this if you are a club owner.", default=False)
 
     def __str__(self):
         return self.user.username
@@ -83,10 +86,6 @@ class Rating(models.Model):
     @property
     def user_reported_safety_(self):
         return "SAFE" if self.is_safe is True else "UNSAFE"
-
-    # def save(self, *args, **kwarg):
-    #     self.user_reported_safety = self.user_reported_safety_
-    #     super(Rating, self).save(*args, **kwarg)
 
     class Meta:
         ordering = ['-number_of_upvotes']  # Default ordering is high to low

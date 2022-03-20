@@ -1,13 +1,11 @@
-$(document).ready(function () {
-    displayMap();
-});
+displayMap();
 
 function displayMap() {
     if (document.getElementById("coordinates") !== null) {
-        let coordinates = document.getElementById("coordinates").value;
+        let coordinates = document.getElementById("coordinates").value; // Get the coordinates
         let coordinatesArray = coordinates.split(/\s+/);
-        coordinatesArray = coordinatesArray.map(Number);
-        let map = L.map('map').setView([coordinatesArray[0], coordinatesArray[1]], 13);
+        coordinatesArray = coordinatesArray.map(Number); // Turn them into floats
+        let map = L.map('map').setView([coordinatesArray[0], coordinatesArray[1]], 13); // Display the map
         L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
             attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
             maxZoom: 18,
@@ -21,7 +19,7 @@ function displayMap() {
 }
 
 function search() {
-    let input, filter, ul, li, a, i, textValue, inputValue;
+    let input, filter, ul, li, a, textValue, inputValue;
     input = document.getElementById("search-input");
     filter = input.value.toUpperCase();
     ul = document.getElementById("elements");
@@ -29,12 +27,11 @@ function search() {
     ul.style.display = 'block'; // Starts being hidden, show it now
     inputValue = input.value;
 
-    if (!inputValue.match(/\S/)) {
-        // If input empty again, hide all search results again
+    if (!inputValue.match(/\S/)) { // If input empty again, hide all search results again
         ul.style.display = 'none';
     }
 
-    for (i = 0; i < li.length; i++) {
+    for (let i = 0; i < li.length; i++) {
         a = li[i].getElementsByTagName("a")[0];
         textValue = a.textContent || a.innerText;
         if (textValue.toUpperCase().indexOf(filter) > -1) {
@@ -43,4 +40,116 @@ function search() {
             li[i].style.display = "none";
         }
     }
+}
+
+/** Helper function to conditionally show and hide elements. */
+function conditionalDisplay(array) {
+    array.forEach(function (element) {
+        if (element.style.display === "none") { // If currently hidden, display them
+            element.style.display = "block";
+        }
+    });
+}
+
+function resetFilter() {
+    let filters = document.getElementsByClassName("filter"); // All filterable elements
+    let filtersArr = [].slice.call(filters);
+    conditionalDisplay(filtersArr);
+    let message = document.getElementById("div-filtering-message");
+    if (message.style.display === 'block') { // Hide the error message if it is there
+        message.style.display = 'none';
+    }
+}
+
+function filterBy(condition) {
+    let selection = document.getElementsByClassName(condition);
+    let filters = document.getElementsByClassName("filter"); // All filterable elements
+    let filtersArr = [].slice.call(filters); // Turn into an array
+    let selectionArr = [].slice.call(selection);
+    let difference = filtersArr.filter(x => selectionArr.indexOf(x) === -1); // Elements that do not have the given
+
+    if (selectionArr.length === 0) {
+        displayNoMatchMessage();
+    }
+
+    difference.forEach(function (element) {
+        element.style.display = "none"; // Display filtered selection
+    });
+}
+
+/** Helper function that announces that no match was found if user selection is empty. */
+function displayNoMatchMessage() {
+    let message = document.getElementById("div-filtering-message");
+    message.style.display = 'block';
+}
+
+function orderReset() {
+    let filters = document.getElementsByClassName("filter");
+    let filtersArr = [].slice.call(filters);
+    conditionalDisplay(filtersArr);
+}
+
+function orderHighToLow(defaultSorting) {
+    let defaultFirst = defaultSorting[0]['fields']['name']; // Taken from Django
+    let filters = document.getElementsByClassName("filter"); // All filterable elements
+    let filtersArr = [].slice.call(filters);
+    let currentFirst = filtersArr[0].className.split(" ")[0];
+    let div = document.getElementById("filtering");
+    let filtersArrLowToHigh = filtersArr.reverse(); // The div which elements are manipulated
+
+    if (currentFirst !== defaultFirst) { // Only sort if it is not already in the correct order
+        removeDiv(filtersArrLowToHigh, div); // Reset the previous state
+        appendDiv(filtersArr, div); // Append in the correct order
+    }
+}
+
+function orderLowToHigh(defaultSortingReverse) {
+    let defaultFirst = defaultSortingReverse[0]['fields']['name'].split(" ")[0]; // Handle multi-name clubs
+    let filters = document.getElementsByClassName("filter"); // All filterable elements
+    let filtersArr = [].slice.call(filters);
+    let currentFirst = filtersArr[0].className.split(" ")[0];
+    let filtersArrLowToHigh = filtersArr.reverse(); // Low to High
+    let div = document.getElementById("filtering");
+
+    if (currentFirst !== defaultFirst) { // Only sort if it is not already in the correct order
+        removeDiv(filtersArr, div);
+        appendDiv(filtersArrLowToHigh, div); // Append in the correct order
+    }
+}
+
+/** Helper function to remove a div from another div. */
+function removeDiv(array, parent) {
+    array.forEach(function (element) {
+        parent.parentNode.appendChild(element);
+    });
+}
+
+/** Helper function to append a div to another div. */
+function appendDiv(array, parent) {
+    array.forEach(function (element) {
+        parent.parentNode.appendChild(element);
+    });
+}
+
+function rateDisplay(condition) {
+    if (condition === "default_display") {
+        let displayDiv = document.getElementById("default_display")
+        displayDiv.style.display = "";
+        let hideDiv = document.getElementById("reverse_rating_by_time")
+        hideDiv.style.display = "none";
+        let ele = document.getElementById("dropdownMenuButton1")
+        ele.innerText = "Ordering" // Changed to "Ordering" so that it behaves like Discover. Before was: "Now to Last"
+    }
+    if (condition === "reverse_rating_by_time") {
+        let displayDiv = document.getElementById("default_display")
+        displayDiv.style.display = "none";
+        let hideDiv = document.getElementById("reverse_rating_by_time")
+        hideDiv.style.display = "";
+        let ele = document.getElementById("dropdownMenuButton1")
+        ele.innerText = "Ordering" // Before was: "Now to Last"
+    }
+}
+
+function rateOrder(condition) {
+
 }

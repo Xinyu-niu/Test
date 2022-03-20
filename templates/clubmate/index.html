@@ -5,8 +5,18 @@
     Home
 {% endblock %}
 
-{% block body_block %}
+{% block is_club_owner %}
+    {% if clubmate_user.is_club_owner %}
+        <!-- Empty, remove the Rate link -->
+    {% else %}
+        <!-- Student, show Rate -->
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'clubmate:rate' %}">Rate</a>
+        </li>
+    {% endif %}
+{% endblock %}
 
+{% block body_block %}
     <div class="d-flex p-2 justify-content-center align-items-center align-self-center text-center">
         <div>
             <h1>ClubMate 👋</h1>
@@ -29,21 +39,22 @@
             </div>
 
             {% if clubmate_user.is_club_owner %}
-                <p class="mb-3 pt-3">Welcome to ClubMate, {{ request.user.username }}. We are glad that you choose to
+                <p class="mb-3 pt-3">Welcome to ClubMate, {{ request.user.username }}. We are glad that you choose
+                    to
                     list your clubs on
                     our website!</p>
                 <a href="{% url 'clubmate:add_club' %}" class="btn btn-primary mr-3">Add Club</a>
-                <a href="{% url 'clubmate:profile' request.user.username %}" class="btn btn-primary mr-3">Your Clubs</a>
+                <a href="{% url 'clubmate:profile' request.user.username %}" class="btn btn-primary mr-3">Your
+                    Clubs</a>
             {% else %}
                 <!-- The rest of the content -->
-                <p class="mb-3 pt-3">Not sure what you are looking for? Discover by clubs by various criteria or browse
+                <p class="mb-3 pt-3">Not sure what you are looking for? Discover by clubs by various criteria or
+                    browse
                     curated
                     lists of clubs we curated for you!</p>
                 <a href="{% url 'clubmate:discover' %}" class="btn btn-primary mr-3">Discover Clubs</a>
                 <a href="{% url 'clubmate:ratings' %}" class="btn btn-primary">Read Ratings</a>
             {% endif %}
-
         </div>
     </div>
-
 {% endblock %}

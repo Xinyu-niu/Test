@@ -43,14 +43,18 @@ body {
 }
 
 
-#elements {
+ul#elements {
     display: none;
 }
 
 #search-input {
-  width: 100%;
-  padding: 10px 35px 10px 15px;
-  border: none;
-  border-radius: 100px;
-  outline: none;
+    width: 100%;
+    padding: 10px 35px 10px 15px;
+    border: none;
+    border-radius: 100px;
+    outline: none;
+}
+
+div#div-filtering-message {
+    display: none;
 }

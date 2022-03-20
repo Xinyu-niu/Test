@@ -1,45 +1,49 @@
-from multiprocessing import context
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core import serializers
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from clubmate.models import Club, UserProfile, Rating
+from clubmate.models import UserProfile, Rating, Club
 from django.contrib.auth import login, authenticate, logout
-from clubmate.forms import UserForm, UserProfileForm
+from clubmate.forms import UserForm, UserProfileForm, RatingDetailForm, RateDetailForm
 from django.contrib import messages
-from django.http import HttpResponseRedirect
-from django.http import HttpResponse
-from django.shortcuts import render_to_response
-from clubmate.forms import RatingDetailForm
-
+from django.http import HttpResponseRedirect, HttpResponse
 from django.core.paginator import Paginator
-from . import models
-from .models import Club
+
+
+def permissions_check_clubmate_user(request, context_dict):
+    """ Helper method to allow rendering of content based on user permissions within templates by passing our custom
+    user into the context dictionary. """
+    if not request.user.is_anonymous:
+        user = request.user  # Get user from the request
+        clubmate_user = UserProfile.objects.get_or_create(user=user)[0]  # Map it to our user
+        context_dict['clubmate_user'] = clubmate_user
 
 
 def index(request):
     clubs = Club.objects.all()
     context_dict = {'clubs': clubs}
-    # Handling club owner permissions with the code below:
-    if not request.user.is_anonymous:
-        user = request.user  # Get user from the request
-        clubmate_user = UserProfile.objects.get_or_create(user=user)[0]  # Map it to our user
-        context_dict['clubmate_user'] = clubmate_user
+    permissions_check_clubmate_user(request, context_dict)
     return render(request, 'clubmate/index.html', context=context_dict)
 
 
 def about(request):
-    return render(request, 'clubmate/about.html')
+    context_dict = {}
+    permissions_check_clubmate_user(request, context_dict)
+    return render(request, 'clubmate/about.html', context=context_dict)
 
 
 def discover(request):
-    all_clubs = Club.objects.all()
+    all_clubs = sorted(Club.objects.all(), key=lambda c: c.average_rating_, reverse=True)
     clubs_by_rating = sorted(Club.objects.all(), key=lambda c: c.average_rating_, reverse=True)[:3]  # High to low
     safe_clubs = sorted(Club.objects.all(), key=lambda c: c.user_reported_safety_)[:3]
     cheapest_clubs = Club.objects.order_by('entry_fee')[:3]
+    default_sorting = serializers.serialize("json", all_clubs)  # For JavaScript
+    default_sorting_reverse = serializers.serialize("json", sorted(Club.objects.all(), key=lambda c: c.average_rating_))
     context_dict = {'all_clubs': all_clubs, 'clubs_by_rating': clubs_by_rating, 'safe_clubs': safe_clubs,
-                    'cheapest_clubs': cheapest_clubs}
+                    'cheapest_clubs': cheapest_clubs, 'default_sorting': default_sorting,
+                    'default_sorting_reverse': default_sorting_reverse}
+    permissions_check_clubmate_user(request, context_dict)
     return render(request, 'clubmate/discover.html', context=context_dict)
 
 
@@ -49,29 +53,30 @@ def club_detail(request, club_id):
     except Club.DoesNotExist:
         club = None
     context_dict = {'club': club}
+    permissions_check_clubmate_user(request, context_dict)
     return render(request, 'clubmate/club_detail.html', context=context_dict)
 
 
 def ratings(request):
-    # maybe used with js
+    # use for reverse
     all_rating_by_time = sorted(Rating.objects.all(), key=lambda c: c.posted_at, reverse=True)
-    all_rating_by_upvote = sorted(Rating.objects.all(), key=lambda c: c.number_of_upvotes, reverse=True)
 
-    # use for display directly
-    default_rating_by_time = sorted(Rating.objects.all(), key=lambda c: c.posted_at, reverse=True)
-    default_rating_by_upvote = sorted(Rating.objects.all(), key=lambda c: c.number_of_upvotes, reverse=True)
+    # use for not reverse
+    reverse_rating_by_time = sorted(Rating.objects.all(), key=lambda c: c.posted_at, reverse=False)
 
     paginator_time = Paginator(all_rating_by_time, 3)
-    paginator_upvote = Paginator(all_rating_by_upvote, 3)
+
+    reverse_paginator_time = Paginator(reverse_rating_by_time, 3)
 
     page_number = request.GET.get('page')
     page_object_time = paginator_time.get_page(page_number)
-    page_object_upvote = paginator_upvote.get_page(page_number)
 
-    context_dict = {'page_object_time': page_object_time, 'page_object_upvote': page_object_upvote,
-                    'default_rating_by_time': default_rating_by_time,
-                    'default_rating_by_upvote': default_rating_by_upvote}
-    return render(request, 'clubmate/ratings.html', context_dict)  # TODO – someone flipped ratings and rate
+    page_reverse_object_time = reverse_paginator_time.get_page(page_number)
+
+    context_dict = {'page_object_time': page_object_time,
+                    'reverse_rating_by_time': page_reverse_object_time, }
+    permissions_check_clubmate_user(request, context_dict)
+    return render(request, 'clubmate/ratings.html', context_dict)
 
 
 def rating_detail(request, rating_id):
@@ -80,6 +85,7 @@ def rating_detail(request, rating_id):
     except Rating.DoesNotExist:
         rating = None
     context_dict = {'rating': rating}
+    permissions_check_clubmate_user(request, context_dict)
     return render(request, 'clubmate/rating_detail.html', context=context_dict)
 
 
@@ -93,34 +99,39 @@ def rate(request):
             user = UserProfile.objects.get(user=user)
             rating.author = user
             rating.save()
-            return redirect(reverse("clubmate:index"))
+            return redirect(reverse("clubmate:ratings"))
         else:
             return HttpResponse("Something went wrong.")
     else:
         form = RatingDetailForm()
         context_dict = {'form': form}
         return render(request, 'clubmate/rate_club.html',
-                      context=context_dict)  # The template that was there before was incorrect
+                      context=context_dict)
 
 
 @login_required  # Anonymous users never even get access to this URL / Restrict to students
 def rate_detail(request, club_id):
-    form = RatingDetailForm()
+    form = RateDetailForm()
+    try:
+        club = Club.objects.get(id=club_id)
+    except Club.DoesNotExist:
+        club = None
 
     if request.method == 'POST':
-        form = RatingDetailForm(request.POST)
+        form = RateDetailForm(request.POST)
         user = request.user
-        this_club = Club.objects.filter(id=club_id)
+        user_pro = UserProfile.objects.get(user=user)
+        this_club = Club.objects.get(id=club_id)
         if form.is_valid():
             if this_club:
                 this_rate = form.save(commit=False)
-                this_rate.author = user.profile
+                this_rate.author = user_pro
                 this_rate.club = this_club
                 this_rate.save()
+                return redirect(reverse("clubmate:ratings"))
         else:
             print(form.errors)
-    context_dict = {'club_id': club_id, 'form': form}
-
+    context_dict = {'club_id': club_id, 'form': form, 'club': club}
     return render(request, 'clubmate/rate_club_detail.html', context_dict)
 
 
@@ -130,14 +141,14 @@ def upvote_rating(request, rating_id):
     rating.number_of_upvotes += 1  # Increment the number of votes
     rating.save()
     return HttpResponseRedirect(
-        request.META.get('HTTP_REFERER'))  # Redirects to the same page. TODO: Try handling with AJAX?
+        request.META.get('HTTP_REFERER'))  # Redirects to the same page
 
 
 @login_required  # Anonymous users never even get access to this URL
 def save_club(request, club_id):
     club = Club.objects.get(id=club_id)  # Get the club in question
     user = request.user  # Get the current user
-    clubmate_user = UserProfile.objects.get(user=user)
+    clubmate_user = UserProfile.objects.get_or_create(user=user)[0]
     clubmate_user.clubs.add(club)  # Add it to the user's profile
     return redirect(reverse('clubmate:profile', kwargs={'username': user.username}))  # Redirect to profile
 
@@ -147,90 +158,120 @@ def add_club(request):
     if request.method == 'POST':
         new_club_name = request.POST.get('name')
         new_club_description = request.POST.get('club_description')
+        new_city = request.POST.get('city')
+        new_website_url = request.POST.get('website_url')
+        new_genre = request.POST.get('genre')
+        new_location_coordinates = request.POST.get('location_coordinates')
         new_entry_fee = request.POST.get('entry_fee')
         new_opening_hours_week = request.POST.get('opening_hours_week')
         new_opening_hours_weekend = request.POST.get('opening_hours_weekend')
-        new_category = request.POST.get('genre')
-        # new_covid_test_required = request.POST.get('covid_test_required')
         new_covid_test_required = request.POST.get('covid_test_required')
-        # new_underage_visitors_allowed = request.POST.get('underage_visitors_allowed')
         new_underage_visitors_allowed = request.POST.get('underage_visitors_allowed')
-        new_website_url = request.POST.get('website_url')
-        new_location_coordinates = request.POST.get('location_coordinates')
-        new_picture = request.POST.get('picture')
-        if new_covid_test_required == None:
-            new_covid_test_required = 0
-        if new_underage_visitors_allowed == None:
-            new_underage_visitors_allowed = 0
-        models.Club.objects.create(name=new_club_name,
-                                   club_description=new_club_description,
-                                   entry_fee=new_entry_fee,
-                                   opening_hours_week=new_opening_hours_week,
-                                   opening_hours_weekend=new_opening_hours_weekend,
-                                   genre=new_category,
-                                   covid_test_required=new_covid_test_required,
-                                   underage_visitors_allowed=new_underage_visitors_allowed,
-                                   website_url=new_website_url,
-                                   location_coordinates=new_location_coordinates,
-                                   picture=new_picture)
-        return HttpResponse("Add Successfully!")
+        if new_covid_test_required is None:  # Checkbox would be None, rather than false if users don't check checkbox
+            new_covid_test_required = False
+        if new_underage_visitors_allowed is None:
+            new_underage_visitors_allowed = False
+        if 'picture' in request.FILES:
+            new_picture = request.FILES['picture']
+        else:
+            new_picture = Club.default  # Return to default picture, if users don't choose a picture
+        club = Club.objects.get_or_create(name=new_club_name,
+                                          club_description=new_club_description,
+                                          city=new_city,
+                                          website_url=new_website_url,
+                                          genre=new_genre,
+                                          location_coordinates=new_location_coordinates,
+                                          entry_fee=new_entry_fee,
+                                          opening_hours_week=new_opening_hours_week,
+                                          opening_hours_weekend=new_opening_hours_weekend,
+                                          picture=new_picture,
+                                          covid_test_required=new_covid_test_required,
+                                          underage_visitors_allowed=new_underage_visitors_allowed,
+                                          average_rating=0.0,  # Give a default value
+                                          user_reported_safety=True)[0]
+        club.save()
+        user = request.user
+        clubmate_user = UserProfile.objects.get_or_create(user=user)[0]  # Match it with our custom user
+        clubmate_user.clubs.add(club)  # Add newly created club to the club owner's profile
+        return redirect(reverse('clubmate:profile', kwargs={'username': user.username}))
     else:
         return render(request, 'clubmate/add_club.html')
 
 
-# Not restricted, so that anonymous users can see who posted ratings
+@login_required
 def profile(request, username):
     user = User.objects.get(username=username)  # Match username from the default user
-    clubmate_user = UserProfile.objects.get(user=user)  # Match it with our custom user
+    clubmate_user = UserProfile.objects.get_or_create(user=user)[0]  # Match it with our custom user
     rating_list = Rating.objects.filter(author=clubmate_user)
     context_dict = {'clubmate_user': clubmate_user, 'ratingList': rating_list}
     return render(request, 'clubmate/profile.html', context=context_dict)
 
 
+@login_required
+def edit_picture(request, username):
+    context_dict = {}
+    if request.method == 'POST':
+        user = request.user
+        clubmate_user = UserProfile.objects.get(user=user)
+        if 'picture' in request.FILES:
+            new_picture = request.FILES['picture']  # Get the new profile picture
+            clubmate_user.picture = new_picture
+            clubmate_user.save()
+        return redirect((reverse('clubmate:profile', kwargs={'username': username})))
+    else:
+        permissions_check_clubmate_user(request, context_dict)
+        return render(request, 'clubmate/edit_picture.html', context_dict)
+
+
 @login_required  # Restrict to club owner
 def edit_club(request, club_id):
     club = Club.objects.get(id=club_id)
-    if request.user != UserProfile.is_club_owner:
-        return HttpResponse("Sorry, you have no right to edit this club.")
-
-    if request.method == "POST":
+    context_dict = {'club_id': club_id, 'club': club}
+    permissions_check_clubmate_user(request, context_dict)
+    if request.method == 'POST':
         new_club_name = request.POST.get('name')
         new_club_description = request.POST.get('club_description')
+        new_city = request.POST.get('city')
+        new_website_url = request.POST.get('website_url')
+        new_genre = request.POST.get('genre')
+        new_location_coordinates = request.POST.get('location_coordinates')
         new_entry_fee = request.POST.get('entry_fee')
         new_opening_hours_week = request.POST.get('opening_hours_week')
         new_opening_hours_weekend = request.POST.get('opening_hours_weekend')
-        new_category = request.POST.get('genre')
         new_covid_test_required = request.POST.get('covid_test_required')
         new_underage_visitors_allowed = request.POST.get('underage_visitors_allowed')
-        new_website_url = request.POST.get('website_url')
-        new_location_coordinates = request.POST.get('location_coordinates')
-        new_picture = request.POST.get('picture')
+        if new_covid_test_required is None:  # Checkbox would be None, rather than false if users don't check checkbox
+            new_covid_test_required = False
+        if new_underage_visitors_allowed is None:
+            new_underage_visitors_allowed = False
+        if 'picture' in request.FILES:
+            new_picture = request.FILES['picture']
+        else:
+            new_picture = Club.default  # Return to default picture, if users don't choose a picture
         club.name = new_club_name
         club.club_description = new_club_description
+        club.city = new_city
+        club.website_url = new_website_url
+        club.genre = new_genre
+        club.location_coordinates = new_location_coordinates
         club.entry_fee = new_entry_fee
         club.opening_hours_week = new_opening_hours_week
         club.opening_hours_weekend = new_opening_hours_weekend
-        club.genre = new_category
+        club.picture = new_picture
         club.covid_test_required = new_covid_test_required
         club.underage_visitors_allowed = new_underage_visitors_allowed
-        club.website_url = new_website_url
-        club.location_coordinates = new_location_coordinates
-        club.picture = new_picture
         club.save()
-        return redirect("clubmate:club_detail", id=id)
+        return redirect(reverse('clubmate:profile', kwargs={'username': request.user.username}))
     else:
-        context_dict = {'club': club}
-        return render(request, 'clubmate/edit_club.html', context_dict)
+        return render(request, 'clubmate/edit_club.html', context=context_dict)
 
 
 @login_required  # Restrict to club owner
 def delete_club(request, club_id):
+    user = request.user
     club = Club.objects.get(id=club_id)
-    if request.user != UserProfile.is_club_owner:
-        return HttpResponse("Sorry, you have no right to delete this club.")
-    else:
-        club.delete()
-        return redirect('clubmate:discover')
+    club.delete()
+    return redirect(reverse('clubmate:profile', kwargs={'username': user.username}))
 
 
 @login_required  # Restrict to students
@@ -242,6 +283,8 @@ def edit_rating(request, rating_id):
         new__title = request.POST.get('title')
         new_score = request.POST.get('rating_score')
         new_safe = request.POST.get('is_safe')
+        if new_safe is None:
+            new_safe = False
         new_rating = request.POST.get('user_commentary')
         rating.title = new__title
         rating.rating_score = new_score
@@ -277,7 +320,7 @@ def log_in(request):
                 return HttpResponse("Your account is disabled.")
         else:
             # Return an 'invalid login' error message.
-            print("invalid login details " + username + " " + password)
+            return render(request, 'clubmate/wrong_credentials.html')
     else:
         # the login is a  GET request, so just show the user the login form.
         return render(request, 'clubmate/login.html')

@@ -1,0 +1,21 @@
+{% extends 'clubmate/base.html' %}
+{% load staticfiles %}
+
+{% block title_block %}
+    Edit Profile Picture
+{% endblock %}
+
+{% block body_block %}
+    <h1 class="mt-3 mb-3">Edit Profile Picture</h1>
+    <form id="form" method="post" action="{% url 'clubmate:edit_picture' user.username %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-group">
+            <label for="picture">Picture</label>
+            <input type="file" id="picture" name="picture">
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </form>
+{% endblock %}
